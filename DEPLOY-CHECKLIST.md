@@ -32,3 +32,11 @@
 - [ ] نشر نسخة الموقع المحدّثة.
 - [ ] من لوحة المدير > إعدادات المحل، ضبط ساعات الدوام ومكان شريط التنقل.
 - [ ] اختبار حجز موعد قبل منتصف الليل وموعد بعد منتصف الليل.
+
+## Customer tracking update (2026-11-17)
+1. Before deploying the updated frontend, run `supabase/customer-tracking-migration.sql` once in Supabase SQL Editor.
+2. Upload the updated project files to the existing GitHub `main` branch (do not delete the repository).
+3. Netlify automatically deploys from `main`.
+4. New booking and queue requests show an 8-digit tracking code. Customers need both their phone number and that code to view status.
+5. Existing requests created before this migration do not have a tracking code and cannot be looked up through the new customer tracking screen.
+6. Queue estimates are approximate and refresh while the customer keeps the tracking page open; this does not send SMS/push alerts when the page is closed.
