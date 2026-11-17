@@ -30,9 +30,7 @@ create table if not exists public.bookings (
   end_time time not null,
   status text not null default 'pending' check (status in ('pending','confirmed','rejected','cancelled','completed')),
   created_at timestamptz not null default now(),
-  constraint valid_booking_time check (end_time > start_time),
-  constraint within_opening_hours check (start_time >= time '15:00' and end_time <= time '22:00'),
-  constraint not_friday check (extract(dow from booking_date) <> 5)
+  constraint valid_booking_time check (end_time > start_time)
 );
 
 create table if not exists public.queue_entries (
@@ -66,6 +64,21 @@ as $$ select exists(select 1 from public.profiles p where p.id = auth.uid() and 
 create or replace function public.is_owner()
 returns boolean language sql stable security definer set search_path = public
 as $$ select exists(select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner'); $$;
+
+create table if not exists public.salon_settings (
+  id boolean primary key default true check (id = true),
+  open_time time not null default time '09:00',
+  close_time time not null default time '02:00',
+  nav_position text not null default 'bottom' check (nav_position in ('bottom','top')),
+  updated_at timestamptz not null default now()
+);
+insert into public.salon_settings (id, open_time, close_time, nav_position)
+values (true, time '09:00', time '02:00', 'bottom') on conflict (id) do nothing;
+alter table public.salon_settings enable row level security;
+drop policy if exists "public can read salon settings" on public.salon_settings;
+create policy "public can read salon settings" on public.salon_settings for select to anon, authenticated using (true);
+drop policy if exists "owner manages salon settings" on public.salon_settings;
+create policy "owner manages salon settings" on public.salon_settings for all to authenticated using (public.is_owner()) with check (public.is_owner());
 
 create or replace function public.join_queue(p_customer_name text, p_customer_phone text, p_service_id uuid)
 returns bigint language plpgsql security definer set search_path = public
